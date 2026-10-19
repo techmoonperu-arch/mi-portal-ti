@@ -1,6 +1,968 @@
-git init
-git add .
-git commit -m "Initial IT Portal"
-git branch -M main
-git remote add origin https://github.com/usuario/mi-portal-ti.git
-git push -u origin main
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfraTech Portal - Data Center, Redes, CCTV & Servidores</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            50: '#f0f9ff',
+                            400: '#38bdf8',
+                            500: '#06b6d4',
+                            600: '#0284c7',
+                            900: '#0b1329',
+                            950: '#050914',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Tech Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        code, pre, .font-mono { font-family: 'Fira Code', monospace; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #050914; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        /* Grid Background pattern */
+        .bg-grid-pattern {
+            background-size: 30px 30px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+        .light .bg-grid-pattern {
+            background-image: 
+                linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 dark:bg-slate-950 dark:text-slate-100 light:bg-slate-50 light:text-slate-900 transition-colors duration-300 min-h-screen flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-cyan-600 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 border border-cyan-400/30">
+        <i class="fa-solid fa-circle-check text-xl"></i>
+        <span id="toastMessage" class="text-sm font-medium">Acción completada</span>
+    </div>
+
+    <!-- Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 dark:bg-slate-900/90 light:bg-white/90 backdrop-blur-md border-b border-slate-800 light:border-slate-200 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+                
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer shrink-0" onclick="filterByCategory('all')">
+                    <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 text-slate-950 p-2.5 rounded-xl shadow-lg shadow-cyan-500/20 font-bold">
+                        <i class="fa-solid fa-server text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent">
+                            InfraTech<span class="text-cyan-400 text-xs ml-1 px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 font-mono">HUB</span>
+                        </span>
+                        <p class="text-[10px] text-slate-400 hidden sm:block tracking-wider uppercase font-semibold">Infraestructura & TI Portal</p>
+                    </div>
+                </div>
+
+                <!-- Live Search Bar -->
+                <div class="flex-1 max-w-lg relative">
+                    <div class="relative">
+                        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Buscar: TIA-942, Monomodo, RAID 10, UPS, H.265..." 
+                            class="w-full pl-10 pr-10 py-2 bg-slate-950/80 dark:bg-slate-950/80 light:bg-slate-100 border border-slate-700/80 light:border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm text-slate-200 light:text-slate-800 placeholder-slate-500 transition shadow-inner">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-slate-400 text-sm"></i>
+                        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-2.5 text-slate-400 hover:text-slate-200 text-xs">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+                    <button onclick="scrollToCalculators()" class="hidden lg:flex items-center space-x-2 text-xs font-semibold px-3 py-2 rounded-xl bg-slate-800 dark:bg-slate-800 light:bg-slate-200 hover:bg-slate-700 border border-slate-700 light:border-slate-300 transition">
+                        <i class="fa-solid fa-calculator text-cyan-400"></i>
+                        <span>Calculadoras</span>
+                    </button>
+
+                    <button onclick="scrollToHostingGuide()" class="hidden sm:flex items-center space-x-2 text-xs font-semibold px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold hover:brightness-110 shadow-lg shadow-cyan-500/20 transition">
+                        <i class="fa-solid fa-rocket"></i>
+                        <span>Hosting Gratis</span>
+                    </button>
+
+                    <button onclick="toggleFavoritesModal()" class="relative p-2.5 rounded-xl bg-slate-800 dark:bg-slate-800 light:bg-slate-200 text-slate-300 light:text-slate-700 hover:text-amber-400 transition" title="Ver Favoritos">
+                        <i class="fa-solid fa-bookmark"></i>
+                        <span id="favCountBadge" class="hidden absolute -top-1 -right-1 bg-amber-500 text-slate-950 font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                    </button>
+
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-800 dark:bg-slate-800 light:bg-slate-200 text-amber-400 dark:text-amber-400 light:text-slate-700 hover:bg-slate-700 transition" title="Cambiar Tema">
+                        <i id="themeIcon" class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- Hero Operations Banner -->
+        <section class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-cyan-950 p-6 sm:p-10 shadow-2xl border border-slate-800 bg-grid-pattern">
+            <div class="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="relative z-10 max-w-3xl space-y-4">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Center of Excellence & Systems Ops
+                </div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                    Infraestructura Tecnológica, <span class="bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent">Telecom & Data Centers</span>
+                </h1>
+                <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
+                    Documentación técnica especializada, normas de cableado estructurado, topologías de alta disponibilidad N+1/2N, cálculo de autonomía en UPS, dimensionamiento de ancho de banda CCTV y guías de despliegue cloud.
+                </p>
+                <div class="flex flex-wrap gap-3 pt-2">
+                    <a href="#categories" class="px-4 py-2 text-xs font-semibold rounded-xl bg-cyan-500 text-slate-950 hover:bg-cyan-400 transition flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group"></i> Explorar Especialidades
+                    </a>
+                    <a href="#calculators" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 transition flex items-center gap-2">
+                        <i class="fa-solid fa-sliders"></i> Herramientas de Cálculo
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Category Filters -->
+        <section id="categories" class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold text-slate-200 light:text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-filter text-cyan-400"></i> Filtrar Especialidad Técnica
+                </h2>
+                <span id="cardCounter" class="text-xs text-slate-400 font-mono">Cargando temas...</span>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none text-xs" id="categoryContainer">
+                <!-- Javascript will populate pills here -->
+            </div>
+        </section>
+
+        <!-- Topics Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="topicsGrid">
+            <!-- Cards rendered dynamically -->
+        </section>
+
+        <!-- Technical Calculators Section -->
+        <section id="calculators" class="pt-8 border-t border-slate-800 light:border-slate-200 space-y-8">
+            <div class="text-center max-w-2xl mx-auto space-y-2">
+                <span class="text-xs font-mono font-bold text-cyan-400 tracking-wider uppercase">Herramientas Interactivas</span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-100 light:text-slate-900">Calculadoras Técnicas de Infraestructura</h2>
+                <p class="text-slate-400 text-sm">Realiza estimaciones rápidas de capacidad para respaldo eléctrico y dimensionamiento de almacenamiento/red.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                <!-- Calculator 1: UPS & Rack Power -->
+                <div class="bg-slate-900 light:bg-white rounded-2xl p-6 border border-slate-800 light:border-slate-200 shadow-xl space-y-5">
+                    <div class="flex items-center space-x-3 border-b border-slate-800 light:border-slate-200 pb-4">
+                        <div class="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
+                            <i class="fa-solid fa-bolt text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-slate-100 light:text-slate-800">Calculadora de Carga en Racks & Autonomía UPS</h3>
+                            <p class="text-xs text-slate-400">Estima consumo térmico/eléctrico y tiempo de respaldo.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <div>
+                            <label class="block text-slate-300 light:text-slate-700 font-medium mb-1">Carga Total Estimada de Equipos (Watts):</label>
+                            <input type="number" id="calcWatts" value="2400" oninput="calculateUPS()" class="w-full bg-slate-950 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-xl px-3 py-2 text-slate-100 light:text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-slate-300 light:text-slate-700 font-medium mb-1">Capacidad del UPS (kVA):</label>
+                                <select id="calcKva" onchange="calculateUPS()" class="w-full bg-slate-950 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-xl px-3 py-2 text-slate-100 light:text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                    <option value="3">3 kVA (2700W)</option>
+                                    <option value="6" selected>6 kVA (5400W)</option>
+                                    <option value="10">10 kVA (9000W)</option>
+                                    <option value="20">20 kVA (18000W)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 light:text-slate-700 font-medium mb-1">Factor de Potencia (FP):</label>
+                                <input type="number" id="calcPf" value="0.9" step="0.05" max="1" min="0.6" oninput="calculateUPS()" class="w-full bg-slate-950 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-xl px-3 py-2 text-slate-100 light:text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-300 light:text-slate-700 font-medium mb-1">Capacidad Batería Externa (Ah a 12V total eq):</label>
+                            <input type="number" id="calcAh" value="100" oninput="calculateUPS()" class="w-full bg-slate-950 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-xl px-3 py-2 text-slate-100 light:text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono">
+                        </div>
+
+                        <!-- Results display -->
+                        <div class="bg-slate-950 light:bg-slate-50 p-4 rounded-xl border border-slate-800 light:border-slate-200 space-y-2 font-mono">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Carga del UPS (% Usado):</span>
+                                <span id="resLoadPercent" class="font-bold text-amber-400">44.4%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Disipación Térmica:</span>
+                                <span id="resBtu" class="font-bold text-cyan-400">8188.8 BTU/h</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-800 light:border-slate-200">
+                                <span class="text-slate-200 font-sans font-semibold">Autonomía Aprox. a Carga Máxima:</span>
+                                <span id="resRuntime" class="font-bold text-lg text-emerald-400">~28 min</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculator 2: CCTV Bandwidth & Storage -->
+                <div class="bg-slate-900 light:bg-white rounded-2xl p-6 border border-slate-800 light:border-slate-200 shadow-xl space-y-5">
+                    <div class="flex items-center space-x-3 border-b border-slate-800 light:border-slate-200 pb-4">
+                        <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
+                            <i class="fa-solid fa-video text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-slate-100 light:text-slate-800">Calculadora Ancho de Banda y Almacenamiento CCTV</h3>
+                            <p class="text-xs text-slate-400">Calcula bitrate en red NVR y discos requeridos en TB.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-slate-300 light:text-slate-700 font-medium mb-1">Nº de Cámaras IP:</label>
+                                <input type="number" id="cctvCameras" value="16" oninput="calculateCCTV()" class="w-full bg-slate-950 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-xl px-3 py-2 text-slate-100 light:text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 light:text-slate-700 font-medium mb-1">Resolución:</label>
+                                <select id="cctvRes" onchange="calculateCCTV()" class="w-full bg-slate-950 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-xl px-3 py-2 text-slate-100 light:text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                    <option value="1080p">1080p (2 MP)</option>
+                                    <option value="4k" selected>4K UltraHD (8 MP)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-slate-300 light:text-slate-700 font-medium mb-1">Códec Compresión:</label>
+                                <select id="cctvCodec" onchange="calculateCCTV()" class="w-full bg-slate-950 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-xl px-3 py-2 text-slate-100 light:text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                    <option value="h264">H.264 (Estándar)</option>
+                                    <option value="h265" selected>H.265 / Smart Codec</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 light:text-slate-700 font-medium mb-1">Días de Grabación 24/7:</label>
+                                <input type="number" id="cctvDays" value="30" oninput="calculateCCTV()" class="w-full bg-slate-950 light:bg-slate-100 border border-slate-700 light:border-slate-300 rounded-xl px-3 py-2 text-slate-100 light:text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono">
+                            </div>
+                        </div>
+
+                        <!-- Results -->
+                        <div class="bg-slate-950 light:bg-slate-50 p-4 rounded-xl border border-slate-800 light:border-slate-200 space-y-2 font-mono">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Ancho de Banda Continuo:</span>
+                                <span id="resCctvMbps" class="font-bold text-cyan-400">64.0 Mbps</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-800 light:border-slate-200">
+                                <span class="text-slate-200 font-sans font-semibold">Almacenamiento Necesario:</span>
+                                <span id="resCctvTB" class="font-bold text-lg text-emerald-400">~20.73 TB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Hosting & Domain Guide Section -->
+        <section id="hostingGuide" class="pt-8 border-t border-slate-800 light:border-slate-200 space-y-8">
+            <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-10 border border-indigo-500/30 shadow-2xl space-y-8">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-indigo-500/20 pb-6">
+                    <div>
+                        <span class="text-xs font-mono font-bold text-cyan-400 tracking-wider uppercase">Despliegue & Producción</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Guía Paso a Paso: Publicar esta Web GRATIS</h2>
+                        <p class="text-slate-300 text-sm mt-1">Aprende a alojar este portal con HTTPS, SSL y Dominio SSL/Subdominio sin pagar un centavo.</p>
+                    </div>
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold self-start md:self-auto">
+                        <i class="fa-solid fa-shield-halved"></i> 100% Gratuito y Perpetuo
+                    </span>
+                </div>
+
+                <!-- Tabs for deployment -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Option 1: GitHub Pages -->
+                    <div class="bg-slate-950/70 p-5 rounded-2xl border border-slate-800 space-y-3 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <i class="fa-brands fa-github text-3xl text-white"></i>
+                                <div>
+                                    <h3 class="font-bold text-slate-100 text-sm">GitHub Pages</h3>
+                                    <span class="text-[10px] text-cyan-400 font-mono">usuario.github.io</span>
+                                </div>
+                            </div>
+                            <ol class="text-xs text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
+                                <li>Crea una cuenta gratis en <a href="https://github.com" target="_blank" class="text-cyan-400 underline">GitHub.com</a>.</li>
+                                <li>Crea un repositorio llamado <code class="bg-slate-800 px-1 py-0.5 rounded text-cyan-300">mi-portal-ti</code>.</li>
+                                <li>Sube este archivo renombrado como <code class="bg-slate-800 px-1 py-0.5 rounded text-cyan-300">index.html</code>.</li>
+                                <li>Ve a <b>Settings > Pages</b> y en Branch elige <b>Main</b>. ¡Listo!</li>
+                            </ol>
+                        </div>
+                        <button onclick="copyDeployCode('github')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-code"></i> Copiar Comandos Git
+                        </button>
+                    </div>
+
+                    <!-- Option 2: Vercel -->
+                    <div class="bg-slate-950/70 p-5 rounded-2xl border border-slate-800 space-y-3 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <i class="fa-solid fa-triangle-circle-square text-3xl text-white"></i>
+                                <div>
+                                    <h3 class="font-bold text-slate-100 text-sm">Vercel CLI / Web</h3>
+                                    <span class="text-[10px] text-cyan-400 font-mono">mi-proyecto.vercel.app</span>
+                                </div>
+                            </div>
+                            <ol class="text-xs text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
+                                <li>Regístrate en <a href="https://vercel.com" target="_blank" class="text-cyan-400 underline">Vercel.com</a> con tu cuenta de GitHub.</li>
+                                <li>Haz clic en <b>"Add New Project"</b> e importa tu repositorio.</li>
+                                <li>Vercel detectará el archivo HTML automáticamente.</li>
+                                <li>Obtienes CDN global ultra rápida y SSL en segundos.</li>
+                            </ol>
+                        </div>
+                        <button onclick="copyDeployCode('vercel')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-terminal"></i> Copiar Comando Vercel CLI
+                        </button>
+                    </div>
+
+                    <!-- Option 3: Netlify / Custom Domain -->
+                    <div class="bg-slate-950/70 p-5 rounded-2xl border border-slate-800 space-y-3 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <i class="fa-solid fa-globe text-3xl text-emerald-400"></i>
+                                <div>
+                                    <h3 class="font-bold text-slate-100 text-sm">Netlify & Dominios</h3>
+                                    <span class="text-[10px] text-emerald-400 font-mono">Drag & Drop / DNS</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Entra a <a href="https://app.netlify.com/drop" target="_blank" class="text-cyan-400 underline">Netlify Drop</a> y arrastra la carpeta con el <code class="bg-slate-800 px-1 py-0.5 rounded text-cyan-300">index.html</code>.
+                            </p>
+                            <div class="border-t border-slate-800 pt-2 space-y-1">
+                                <span class="text-[11px] font-bold text-slate-200">¿Dominios Gratuito Personalizado?</span>
+                                <p class="text-[11px] text-slate-400">Usa servicios como <b>DuckDNS</b> o regístrate en registradore libres para Vincular CNAME / A Records en la configuración DNS de tu hosting gratis.</p>
+                            </div>
+                        </div>
+                        <button onclick="copyDeployCode('dns')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-network-wired"></i> Ver Registro CNAME Tipo
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal for Deep Technical Explication -->
+    <div id="techModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
+        <div class="bg-slate-900 light:bg-white border border-slate-800 light:border-slate-300 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden my-8 flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-slate-800 light:border-slate-200 flex justify-between items-start bg-slate-950/50 light:bg-slate-50">
+                <div class="space-y-1 pr-4">
+                    <span id="modalCategoryBadge" class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold uppercase">Categoría</span>
+                    <h3 id="modalTitle" class="text-xl sm:text-2xl font-bold text-slate-100 light:text-slate-900">Título del Tema Técnico</h3>
+                </div>
+                <button onclick="closeModal()" class="p-2 rounded-xl bg-slate-800 light:bg-slate-200 text-slate-400 hover:text-slate-100 light:hover:text-slate-900 transition shrink-0">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div class="p-6 overflow-y-auto space-y-6 text-slate-300 light:text-slate-700 text-sm leading-relaxed" id="modalBody">
+                <!-- Dynamic Content injected here -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-slate-800 light:border-slate-200 bg-slate-950/50 light:bg-slate-50 flex justify-between items-center text-xs">
+                <span class="text-slate-500 font-mono">Norma / Estándar: <span id="modalStandard" class="text-slate-300 light:text-slate-700 font-semibold">ISO/IEC - TIA</span></span>
+                <button onclick="closeModal()" class="px-5 py-2 bg-slate-800 light:bg-slate-200 hover:bg-slate-700 text-slate-200 light:text-slate-800 font-semibold rounded-xl transition">
+                    Cerrar Detalle
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Bookmarks / Favorites -->
+    <div id="favModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+        <div class="bg-slate-900 light:bg-white border border-slate-800 light:border-slate-300 w-full max-w-lg rounded-3xl shadow-2xl p-6 space-y-5">
+            <div class="flex justify-between items-center border-b border-slate-800 light:border-slate-200 pb-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-bookmark text-amber-400 text-lg"></i>
+                    <h3 class="font-bold text-lg text-slate-100 light:text-slate-900">Temas Guardados / Favoritos</h3>
+                </div>
+                <button onclick="toggleFavoritesModal()" class="text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div id="favList" class="space-y-3 max-h-80 overflow-y-auto">
+                <!-- Favorites items injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 light:border-slate-200 bg-slate-950 light:bg-slate-100 text-slate-400 py-8 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-2">
+                <div class="bg-cyan-500/10 text-cyan-400 p-1.5 rounded-lg border border-cyan-500/20">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+                <span class="font-bold text-slate-200 light:text-slate-800">InfraTech HUB &copy; 2026</span>
+                <span>- Portal Técnico Educativo de Infraestructura IT</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span>Estándares TIA-568 / TIA-942</span>
+                <span>•</span>
+                <a href="#hostingGuide" class="text-cyan-400 hover:underline">Guía de Despliegue</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Data & Logic -->
+    <script>
+        // Data Store for Infrastructure Topics
+        const topicsData = [
+            {
+                id: 'datacenter-tier',
+                category: 'Data Center',
+                categorySlug: 'datacenter',
+                title: 'Clasificación ANSI/TIA-942 Tiers I a IV',
+                readTime: '6 min lectura',
+                badge: 'TIA-942 Standard',
+                shortDesc: 'Niveles de redundancia, disponibilidad del 99.982% al 99.999% y tolerancia a fallas en infraestructura de Misión Crítica.',
+                keySpecs: [
+                    'Tier I: Vía única sin redundancia (99.671%)',
+                    'Tier II: Componentes redundantes N+1',
+                    'Tier III: Mantenible simultáneamente',
+                    'Tier IV: Tolerante a fallas 2N+1 (99.999%)'
+                ],
+                bodyContent: `
+                    <p class="mb-4">La norma <b>ANSI/TIA-942</b> define los requerimientos para centros de datos. La disponibilidad y resiliencia se dividen en 4 niveles Tiers:</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4 font-mono text-xs">
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <h4 class="text-cyan-400 font-bold mb-2">Tier III - Mantenimiento Simultáneo</h4>
+                            <p class="text-slate-400">Permite realizar cualquier actividad planificada en la instalación sin interrumpir las operaciones del equipamiento de TI.</p>
+                            <p class="mt-2 text-emerald-400">Downtime máx: 1.6 hrs/año</p>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <h4 class="text-cyan-400 font-bold mb-2">Tier IV - Tolerante a Fallas (2N)</h4>
+                            <p class="text-slate-400">Sistemas de potencia, refrigeración y red completamente duplicados de extremo a extremo.</p>
+                            <p class="mt-2 text-emerald-400">Downtime máx: 0.4 hrs/año</p>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-slate-100 text-base mb-2">Diagrama de Redundancia Eléctrica 2N (Tier IV):</h4>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-slate-300">
+                        <pre class="overflow-x-auto">
+[Red Comercial A] ──> [UPS A] ──> [PDU A] ──┐
+                                            ├──> [Servidor Doble Fuente (PSU 1 & PSU 2)]
+[Red Comercial B] ──> [UPS B] ──> [PDU B] ──┘
+                        </pre>
+                    </div>
+                `
+            },
+            {
+                id: 'servers-raid',
+                category: 'Servidores',
+                categorySlug: 'servidores',
+                title: 'Arquitectura de Almacenamiento RAID & SAN/NAS',
+                readTime: '8 min lectura',
+                badge: 'Enterprise Storage',
+                shortDesc: 'Configuraciones de arreglos de discos RAID 0, 1, 5, 6 y 10 para alto rendimiento, tolerancia a fallas y rendimiento en servidores rackeables.',
+                keySpecs: [
+                    'RAID 1: Mirroring (50% capacidad útil)',
+                    'RAID 5: Paridad distribuida (mín. 3 discos)',
+                    'RAID 6: Paridad doble (tolera 2 fallas)',
+                    'RAID 10: Stripe + Mirroring (alto IOPS)'
+                ],
+                bodyContent: `
+                    <p class="mb-4">El almacenamiento empresarial en servidores rack de formato 1U/2U/4U requiere equilibrio entre tolerancia a fallos, velocidad IOPS y costo por Gigabyte.</p>
+
+                    <div class="space-y-3 font-mono text-xs">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="text-amber-400 font-bold">RAID 5:</span> Requiere mínimo 3 discos. Soporta la pérdida de 1 disco. Capacidad Útil = (N - 1) * Capacidad.
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="text-cyan-400 font-bold">RAID 10 (1+0):</span> Combina reflejo y fraccionamiento. Excelente para bases de datos transaccionales SQL/Oracle por alta velocidad de escritura.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'ups-power',
+                category: 'UPS',
+                categorySlug: 'ups',
+                title: 'Sistemas UPS On-Line de Doble Conversión',
+                readTime: '5 min lectura',
+                badge: 'Power Quality',
+                shortDesc: 'Topologías de UPS Off-line vs Line-Interactive vs On-Line Doble Conversión para protección continua contra microcortes, armónicos y picos.',
+                keySpecs: [
+                    'Cero tiempo de transferencia (0 ms)',
+                    'Inversor suministra onda senoidal pura continua',
+                    'By-pass estático automático ante sobrecargas',
+                    'Baterías VRLA / Li-Ion en Gabinetes Externos'
+                ],
+                bodyContent: `
+                    <p class="mb-4">En Data Centers y salas de telecomunicaciones solo debe utilizarse UPS de arquitectura <b>On-Line Doble Conversión</b>.</p>
+                    
+                    <h4 class="font-bold text-slate-100 text-sm mb-2">Esquema de Funcionamiento On-Line:</h4>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-cyan-300">
+                        <p class="mb-2">[AC Entrada] ──> [Rectificador AC/DC] ──┬──> [Inversor DC/AC] ──> [Carga Salida] (Limpia)</p>
+                        <p class="text-slate-500">                                    └──> [Banco Baterías DC]</p>
+                    </div>
+                `
+            },
+            {
+                id: 'cabling-fiber-copper',
+                category: 'Cableado FO y Cobre',
+                categorySlug: 'cableado',
+                title: 'Cableado Estructurado: Cobre Cat6A/Cat8 vs Fibra Óptica',
+                readTime: '7 min lectura',
+                badge: 'ANSI/TIA-568.0-D',
+                shortDesc: 'Normativa para canales de parcheo, fibra Monomodo (OS2) vs Multimodo (OM4/OM5) y límites de distancia de 100 metros en pares trenzados.',
+                keySpecs: [
+                    'Cat6A: 10 Gbps hasta 100 metros (500 MHz)',
+                    'Cat8: 25G/40G Base-T hasta 30 metros',
+                    'Fibra Monomodo OS2: Enlaces de larga distancia (1310/1550nm)',
+                    'Fibra Multimodo OM4/OM5: Datacenters a 850nm VCSEL'
+                ],
+                bodyContent: `
+                    <p class="mb-4">El estándar <b>ANSI/TIA-568</b> reglamenta la topología en estrella jerárquica para cableado estructurado comercial.</p>
+
+                    <h4 class="font-bold text-slate-100 text-sm mb-2">Esquema T568A vs T568B para conectores RJ45:</h4>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-slate-300">
+                        <p class="text-amber-400 font-bold mb-1">Norma T568B (Más Utilizada en LatAm):</p>
+                        <p>Pin 1: Blanco/Naranja | Pin 2: Naranja</p>
+                        <p>Pin 3: Blanco/Verde   | Pin 4: Azul</p>
+                        <p>Pin 5: Blanco/Azul    | Pin 6: Verde</p>
+                        <p>Pin 7: Blanco/Marrón  | Pin 8: Marrón</p>
+                    </div>
+                `
+            },
+            {
+                id: 'solutions-devops',
+                category: 'Soluciones Informáticas',
+                categorySlug: 'soluciones',
+                title: 'Virtualización VMware ESXi, Proxmox VE & Docker',
+                readTime: '6 min lectura',
+                badge: 'Cloud & Systems',
+                shortDesc: 'Consolidación de infraestructura física mediante hipervisores Tipo 1 (Bare-Metal) y orquestación de contenedores en la nube.',
+                keySpecs: [
+                    'Hipervisor Tipo 1: Instalación directa en hardware',
+                    'Migración en vivo: vMotion / Proxmox Live Migration',
+                    'Contenedores Linux (LXC/Docker) de mínimo footprint',
+                    'High Availability (HA) Cluster con quorum de almacenamiento'
+                ],
+                bodyContent: `
+                    <p class="mb-4">La virtualización optimiza el uso de recursos de procesador Xeon/EPYC y memoria RAM ECC en servidores físicos.</p>
+                `
+            },
+            {
+                id: 'telecom-gpon',
+                category: 'Telecomunicaciones',
+                categorySlug: 'telecom',
+                title: 'Redes Ópticas Pasivas GPON / XGS-PON & Enlaces',
+                readTime: '9 min lectura',
+                badge: 'FTTH / FTTD',
+                shortDesc: 'Arquitecturas de telecomunicaciones para distribución de fibra hasta el escritorio o residencia utilizando OLT, ONT y Splitters pasivos.',
+                keySpecs: [
+                    'GPON: 2.5 Gbps Bajada / 1.25 Gbps Subida',
+                    'XGS-PON: 10 Gbps Simétricos sobre la misma red FO',
+                    'Splitters Ópticos 1:32 / 1:64 pasivos',
+                    'Presupuesto Óptico (Optical Power Budget) dBm'
+                ],
+                bodyContent: `
+                    <p class="mb-4">GPON utiliza una única fibra óptica monomodo multiplexando longitudes de onda (WDM) para transmitir datos en subida y bajada sin componentes activos intermedios.</p>
+                `
+            },
+            {
+                id: 'electronics-embedded',
+                category: 'Electrónica',
+                categorySlug: 'electronica',
+                title: 'Electrónica Digital, Sensores IoT & Microcontroladores',
+                readTime: '5 min lectura',
+                badge: 'Hardware & IoT',
+                shortDesc: 'Monitoreo ambiental en Data Center: Temperatura, humedad, detección de agua y relevadores remotos mediante modbus/SNMP.',
+                keySpecs: [
+                    'Protocolos industriales: RS485 Modbus RTU / TCP',
+                    'Alertas SNMP Traps / MQTT para monitoreo centralizado',
+                    'Sistemas de aislamiento galvánico y optoacopladores',
+                    'Microcontroladores ESP32/ARM en tableros de control'
+                ],
+                bodyContent: `
+                    <p class="mb-4">El monitoreo continuo de variables físicas previene fallas catastróficas por sobrecalentamiento o condensación en salas técnicas.</p>
+                `
+            },
+            {
+                id: 'cctv-surveillance',
+                category: 'CCTV',
+                categorySlug: 'cctv',
+                title: 'Sistemas de Videovigilancia IP, NVR & Analítica IA',
+                readTime: '6 min lectura',
+                badge: 'Physical Security',
+                shortDesc: 'Diseño de sistemas CCTV IP con PoE (802.3at/bt), compresión H.265+, reconocimiento de matrículas LPR y analítica de cruce de línea.',
+                keySpecs: [
+                    'Alimentación PoE+ hasta 30W por puerto',
+                    'Compresión inteligente H.265+ (ahorro de 70% de ancho de banda)',
+                    'Sensor WDR (Wide Dynamic Range) > 120dB para contraluces',
+                    'Discos HDD Enterprise con firmware para video 24/7 (WD Purple/Seagate SkyHawk)'
+                ],
+                bodyContent: `
+                    <p class="mb-4">La seguridad electrónica moderna se integra con la red IP compartida mediante VLANs dedicadas con QoS priorizado.</p>
+                `
+            }
+        ];
+
+        // Categories List
+        const categories = [
+            { name: 'Todos', slug: 'all', icon: 'fa-border-all' },
+            { name: 'Data Center', slug: 'datacenter', icon: 'fa-server' },
+            { name: 'Servidores', slug: 'servidores', icon: 'fa-database' },
+            { name: 'UPS', slug: 'ups', icon: 'fa-bolt' },
+            { name: 'Cableado FO/Cobre', slug: 'cableado', icon: 'fa-network-wired' },
+            { name: 'Soluciones TI', slug: 'soluciones', icon: 'fa-cubes' },
+            { name: 'Telecomunicaciones', slug: 'telecom', icon: 'fa-tower-cell' },
+            { name: 'Electrónica', slug: 'electronica', icon: 'fa-microchip' },
+            { name: 'CCTV', slug: 'cctv', icon: 'fa-video' }
+        ];
+
+        // State Variables
+        let currentCategory = 'all';
+        let searchQuery = '';
+        let favorites = JSON.parse(localStorage.getItem('infratech_favs') || '[]');
+
+        // Initialize Page
+        window.onload = function() {
+            renderCategoryPills();
+            renderTopics();
+            updateFavBadge();
+            calculateUPS();
+            calculateCCTV();
+        };
+
+        <!-- Theme Management -->
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                themeIcon.className = 'fa-solid fa-sun';
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                themeIcon.className = 'fa-solid fa-moon';
+            }
+        }
+
+        <!-- Render Category Pills -->
+        function renderCategoryPills() {
+            const container = document.getElementById('categoryContainer');
+            container.innerHTML = categories.map(cat => `
+                <button onclick="filterByCategory('${cat.slug}')" 
+                    class="px-3.5 py-2 rounded-xl whitespace-nowrap font-medium transition flex items-center space-x-2 ${
+                        currentCategory === cat.slug 
+                        ? 'bg-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20' 
+                        : 'bg-slate-900 light:bg-white text-slate-300 light:text-slate-700 border border-slate-800 light:border-slate-300 hover:bg-slate-800'
+                    }">
+                    <i class="fa-solid ${cat.icon}"></i>
+                    <span>${cat.name}</span>
+                </button>
+            `).join('');
+        }
+
+        <!-- Filter Action -->
+        function filterByCategory(slug) {
+            currentCategory = slug;
+            renderCategoryPills();
+            renderTopics();
+        }
+
+        <!-- Live Search -->
+        function handleSearch() {
+            const input = document.getElementById('searchInput');
+            searchQuery = input.value.toLowerCase().trim();
+            document.getElementById('clearSearchBtn').classList.toggle('hidden', searchQuery === '');
+            renderTopics();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            searchQuery = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            renderTopics();
+        }
+
+        <!-- Render Cards -->
+        function renderTopics() {
+            const grid = document.getElementById('topicsGrid');
+            const counter = document.getElementById('cardCounter');
+
+            let filtered = topicsData.filter(item => {
+                const matchesCategory = currentCategory === 'all' || item.categorySlug === currentCategory;
+                const matchesSearch = searchQuery === '' || 
+                    item.title.toLowerCase().includes(searchQuery) ||
+                    item.category.toLowerCase().includes(searchQuery) ||
+                    item.shortDesc.toLowerCase().includes(searchQuery) ||
+                    item.keySpecs.some(s => s.toLowerCase().includes(searchQuery));
+                return matchesCategory && matchesSearch;
+            });
+
+            counter.innerText = `Mostrando ${filtered.length} especialidades`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-slate-900/50 light:bg-slate-100 rounded-3xl border border-slate-800 light:border-slate-300 space-y-3">
+                        <i class="fa-solid fa-magnifying-glass text-3xl text-slate-600"></i>
+                        <p class="text-slate-400 font-medium text-sm">No se encontraron temas técnicos para "${searchQuery}"</p>
+                        <button onclick="clearSearch(); filterByCategory('all');" class="text-xs text-cyan-400 hover:underline">Restablecer todos los filtros</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => {
+                const isFav = favorites.includes(item.id);
+                return `
+                <article class="bg-slate-900 light:bg-white rounded-2xl p-5 border border-slate-800 light:border-slate-200 shadow-xl hover:border-slate-700 transition duration-300 flex flex-col justify-between group">
+                    <div class="space-y-4">
+                        <!-- Top Metadata -->
+                        <div class="flex justify-between items-start">
+                            <span class="text-[10px] font-mono px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold uppercase tracking-wider">
+                                ${item.badge}
+                            </span>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[11px] text-slate-400 font-mono"><i class="fa-regular fa-clock mr-1"></i>${item.readTime}</span>
+                                <button onclick="toggleFav('${item.id}')" class="text-slate-500 hover:text-amber-400 transition" title="Guardar a Favoritos">
+                                    <i class="${isFav ? 'fa-solid text-amber-400' : 'fa-regular'} fa-bookmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card Header -->
+                        <div>
+                            <span class="text-xs text-slate-400 uppercase font-semibold tracking-wider">${item.category}</span>
+                            <h3 class="text-lg font-bold text-slate-100 light:text-slate-900 mt-1 group-hover:text-cyan-400 transition">
+                                ${item.title}
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-2 leading-relaxed">${item.shortDesc}</p>
+                        </div>
+
+                        <!-- Key Specs List -->
+                        <div class="bg-slate-950 light:bg-slate-50 p-3 rounded-xl border border-slate-800/80 light:border-slate-200 space-y-1.5 font-mono text-[11px]">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Especificaciones Clave:</span>
+                            ${item.keySpecs.map(spec => `
+                                <div class="flex items-start space-x-1.5 text-slate-300 light:text-slate-700">
+                                    <i class="fa-solid fa-angle-right text-cyan-400 text-[10px] mt-0.5"></i>
+                                    <span>${spec}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="pt-5 mt-4 border-t border-slate-800/60 light:border-slate-200">
+                        <button onclick="openModal('${item.id}')" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 light:bg-slate-100 hover:bg-cyan-500 hover:text-slate-950 text-slate-200 light:text-slate-800 text-xs font-semibold transition duration-200 flex items-center justify-center space-x-2">
+                            <span>Ver Explicación Técnica & Diagramas</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </article>
+            `}).join('');
+        }
+
+        <!-- Technical Modal Operations -->
+        function openModal(id) {
+            const item = topicsData.find(t => t.id === id);
+            if (!item) return;
+
+            document.getElementById('modalCategoryBadge').innerText = item.category + ' | ' + item.badge;
+            document.getElementById('modalTitle').innerText = item.title;
+            document.getElementById('modalStandard').innerText = item.badge;
+            document.getElementById('modalBody').innerHTML = item.bodyContent;
+
+            document.getElementById('techModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('techModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        <!-- Favorites System -->
+        function toggleFav(id) {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(f => f !== id);
+                showToast('Eliminado de tus marcadores');
+            } else {
+                favorites.push(id);
+                showToast('Guardado en tus marcadores');
+            }
+            localStorage.setItem('infratech_favs', JSON.stringify(favorites));
+            updateFavBadge();
+            renderTopics();
+            renderFavModalList();
+        }
+
+        function updateFavBadge() {
+            const badge = document.getElementById('favCountBadge');
+            if (favorites.length > 0) {
+                badge.innerText = favorites.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function toggleFavoritesModal() {
+            const modal = document.getElementById('favModal');
+            if (modal.classList.contains('hidden')) {
+                renderFavModalList();
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function renderFavModalList() {
+            const list = document.getElementById('favList');
+            if (favorites.length === 0) {
+                list.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">No tienes marcadores guardados todavía.</p>';
+                return;
+            }
+
+            const favItems = topicsData.filter(t => favorites.includes(t.id));
+            list.innerHTML = favItems.map(item => `
+                <div class="flex items-center justify-between p-3 bg-slate-950 light:bg-slate-100 rounded-xl border border-slate-800 light:border-slate-200">
+                    <div class="space-y-0.5">
+                        <span class="text-[10px] text-cyan-400 font-mono">${item.category}</span>
+                        <h4 class="text-xs font-bold text-slate-200 light:text-slate-800">${item.title}</h4>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openModal('${item.id}'); toggleFavoritesModal();" class="p-1.5 text-xs text-cyan-400 hover:text-cyan-300">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                        <button onclick="toggleFav('${item.id}')" class="p-1.5 text-xs text-red-400 hover:text-red-300">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        <!-- Calculators Logic -->
+        function calculateUPS() {
+            const watts = parseFloat(document.getElementById('calcWatts').value) || 0;
+            const kva = parseFloat(document.getElementById('calcKva').value) || 1;
+            const pf = parseFloat(document.getElementById('calcPf').value) || 0.9;
+            const ah = parseFloat(document.getElementById('calcAh').value) || 0;
+
+            const maxWatts = kva * 1000 * pf;
+            const loadPercent = Math.min((watts / maxWatts) * 100, 150).toFixed(1);
+            const btu = (watts * 3.41214).toFixed(1);
+
+            // Estimated runtime approximation: (Ah * 12V * efficiency) / Watts
+            let runtimeMin = 0;
+            if (watts > 0) {
+                runtimeMin = Math.round((ah * 12 * 0.85 / watts) * 60);
+            }
+
+            document.getElementById('resLoadPercent').innerText = `${loadPercent}%`;
+            document.getElementById('resBtu').innerText = `${btu} BTU/h`;
+            document.getElementById('resRuntime').innerText = `~${runtimeMin} min`;
+        }
+
+        function calculateCCTV() {
+            const cameras = parseInt(document.getElementById('cctvCameras').value) || 0;
+            const res = document.getElementById('cctvRes').value;
+            const codec = document.getElementById('cctvCodec').value;
+            const days = parseInt(document.getElementById('cctvDays').value) || 1;
+
+            // Mbps per camera base estimation
+            let bitratePerCam = res === '4k' ? 8 : 3; // Mbps for 4K vs 1080p in H264
+            if (codec === 'h265') bitratePerCam = bitratePerCam * 0.5; // 50% savings
+
+            const totalMbps = (cameras * bitratePerCam).toFixed(1);
+            
+            // Storage in Gigabytes: (totalMbps * 3600 * 24 * days) / (8 * 1024)
+            const totalGB = (totalMbps * 86400 * days) / 8192;
+            const totalTB = (totalGB / 1024).toFixed(2);
+
+            document.getElementById('resCctvMbps').innerText = `${totalMbps} Mbps`;
+            document.getElementById('resCctvTB').innerText = `~${totalTB} TB`;
+        }
+
+        <!-- Deploy Code Helper -->
+        function copyDeployCode(type) {
+            let code = '';
+            if (type === 'github') {
+                code = 'git init\ngit add .\ngit commit -m "Initial IT Portal"\ngit branch -M main\ngit remote add origin https://github.com/usuario/mi-portal-ti.git\ngit push -u origin main';
+            } else if (type === 'vercel') {
+                code = 'npm i -g vercel\nvercel login\nvercel --prod';
+            } else {
+                code = 'CNAME  @  mi-portal-ti.netlify.app.\nTXT    @  v=spf1 include:spf.hosting.com ~all';
+            }
+
+            // Clipboard fallback
+            const temp = document.createElement('textarea');
+            temp.value = code;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+
+            showToast('¡Comandos copiados al portapapeles!');
+        }
+
+        <!-- Scroll helpers -->
+        function scrollToCalculators() {
+            document.getElementById('calculators').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function scrollToHostingGuide() {
+            document.getElementById('hostingGuide').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        <!-- Toast Feedback -->
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
